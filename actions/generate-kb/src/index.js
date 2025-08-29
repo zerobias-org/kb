@@ -156,8 +156,16 @@ async function main() {
   const copyAndReplace = copyAndReplaceFunc(pkgDir);
   fs.writeFileSync(path.join(kbDir, '.npmrc'), npmrc);
 
-  const contentFile = fs.existsSync(path.join(pkgDir, 'USERGUIDE.md'))
-    ? path.join(pkgDir, 'USERGUIDE.md') : path.join(pkgDir, 'README.md');
+  const userguideExists = fs.existsSync(path.join(pkgDir, 'UxSERGUIDE.md'));
+
+  if (userguideExists) {
+    console.info(`Found USERGUIDE.md at ${path.join(pkgDir, 'USERGUIDE.md')}`);
+  } else {
+    console.info(`User guide not found, falling back to README.md`);
+    console.info(`Package files: ${fs.readdirSync(pkgDir).join(', ')}.`);
+  }
+
+  const contentFile = userguideExists ? path.join(pkgDir, 'USERGUIDE.md') : path.join(pkgDir, 'README.md');
   const code = copyAndReplace('_index.md', path.join(kbDir, '_index.md'));
   const content = fs.readFileSync(contentFile, 'utf8');
   fs.appendFileSync(path.join(kbDir, '_index.md'), content);
