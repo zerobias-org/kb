@@ -1,0 +1,32 @@
+{
+  "name": "kb",
+  "version": "1.0.0",
+  "description": "Zerobias-org kb artifacts",
+  "main": "main.js",
+  "scripts": {
+    "build": "npx lerna run transpile && npx lerna exec \"npm shrinkwrap\" --concurrency=10",
+    "clean": "npx nx reset && lerna run clean",
+    "clean:full": "npx lerna exec \"rm -f npm-shrinkwrap.json package-lock.json\" --concurrency=10 && npx lerna run clean && npx lerna clean --yes && nx reset",
+    "lerna:dry-run": "lerna version --no-git-tag-version --no-push --conventional-commits",
+    "lerna:publish": "lerna publish --conventional-commits --no-verify-access",
+    "lerna:test": "lerna run test",
+    "lerna:version": "lerna version --no-git-tag-version --no-push --conventional-commits --yes",
+    "start": "hugo server --disableFastRender",
+    "reinstall": "npm run clean:full && npx lerna bootstrap --concurrency=10 --include-dependencies",
+    "postinstall": "husky install",
+    "reset": "npm run clean:full && npx lerna bootstrap --concurrency=10 --include-dependencies && npm run build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zerobias-org/kb.git"
+  },
+  "author": "team@zerobias.com",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/zerobias-org/kb/issues"
+  },
+  "homepage": "https://github.com/zerobias-org/kb#readme",
+  "devDependencies": {
+    "husky": "^7.0.4"
+  }
+}
