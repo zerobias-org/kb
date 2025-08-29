@@ -21,12 +21,10 @@ if (tagOnly) {
   console.info('Starting publish job');
 }
 
-const npmrc = `
-@auditmation:registry=https://pkg.zerobias.org
+const npmrc = `@auditmation:registry=https://pkg.zerobias.org
 @auditlogic:registry=https://pkg.zerobias.org
 @zerobias-org:registry=https://pkg.zerobias.org
-//pkg.zerobias.org/:_authToken=\${ZB_TOKEN}
-`;
+//pkg.zerobias.org/:_authToken=\${ZB_TOKEN}`;
 
 function copyAndReplaceFunc(pkgDir) {
   /* Substitutions:
