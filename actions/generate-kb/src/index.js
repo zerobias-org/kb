@@ -156,7 +156,7 @@ async function main() {
   const copyAndReplace = copyAndReplaceFunc(pkgDir);
   fs.writeFileSync(path.join(kbDir, '.npmrc'), npmrc);
 
-  const userguideExists = fs.existsSync(path.join(pkgDir, 'UxSERGUIDE.md'));
+  const userguideExists = fs.existsSync(path.join(pkgDir, 'USERGUIDE.md'));
 
   if (userguideExists) {
     console.info(`Found USERGUIDE.md at ${path.join(pkgDir, 'USERGUIDE.md')}`);
