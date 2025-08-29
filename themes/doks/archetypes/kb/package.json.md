@@ -1,5 +1,5 @@
 {
-  "name": "@auditlogic/kb-{{ getenv "HUGO_NAME" }}",
+  "name": "@zerobias-org/kb-{{ getenv "HUGO_NAME" }}",
   "version": "0.1.0",
   "description": "{{ getenv "HUGO_DESCRIPTION" }}",
   "author": "{{ getenv "HUGO_AUTHOR" }}",
@@ -7,7 +7,7 @@
   "main": "index.md",
   "repository": {
     "type": "git",
-    "url": "git@github.com:auditlogic/kb.git",
+    "url": "git@github.com:zerobias-org/kb.git",
     "directory": "package/{{ getenv "HUGO_NAME" }}"
   },
   "publishConfig": {

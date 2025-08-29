@@ -1,6 +1,6 @@
 baseURL = "http://localhost:1313"
 languageCode = "en-us"
-title = "Auditlogic Knowledge Base"
+title = "ZeroBias org Knowledge Base"
 theme = "doks"
 ignoreFiles = [
   ".*package\\.json$",

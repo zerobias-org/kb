@@ -47,7 +47,7 @@ function copyAndReplaceFunc(pkgDir) {
   let [pkgScope, pkgName] = name.split('/');
   pkgName = pkgName.replace('module-', '');
   const code = `${codePrefix}${pkgName.replace(/-/g, '')}`;
-  pkgName = `kb-${code}-${pkgName}`;
+  pkgName = `kb-${codePrefix}-${pkgName}`;
 
   return (fileName, destPath) => {
     const f = fs.readFileSync(path.join(__dirname, '..', 'resources', fileName));
@@ -207,7 +207,7 @@ async function main() {
   const { name } = pkgJson;
   let [pkgScope, kbPkgName] = name.split('/');
   kbPkgName = kbPkgName.replace('module-', '');
-  kbPkgName = `kb-${code}-${kbPkgName}`;
+  kbPkgName = `kb-${codePrefix}-${kbPkgName}`;
   console.info(`Checking dist tags for ${pkgScope}/${kbPkgName}@${pkgVersion}`);
   execOptions.env = {
     ...process.env,
