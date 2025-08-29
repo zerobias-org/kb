@@ -118,18 +118,8 @@ async function main() {
   const execOptions = { stdio: 'inherit' };
   execOptions.env = {
     ...process.env,
-    NPM_TOKEN: process.env.READ_TOKEN,
     ZB_TOKEN: process.env.ZB_TOKEN
   };
-
-  const distTags = JSON.parse(execSync(`npm view ${pkgName}@${pkgVersion} dist-tags --json`, {
-    env: {
-      ...process.env,
-      NPM_TOKEN: process.env.READ_TOKEN,
-      ZB_TOKEN: process.env.ZB_TOKEN
-    }
-  }));
-  console.info(`Found dist tags ${JSON.stringify(distTags, null, 2)}`);
 
   // install target module to extract API
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'zerobiasorg-'));
@@ -143,6 +133,14 @@ async function main() {
   // download the package
   spawnSync('npm', ['pack', '--silent', `${pkgName}@${pkgVersion}`], execOptions);
   console.info(`Directory listing for ${tmpDir}: ${fs.readdirSync(tmpDir)}`);
+
+  const distTags = JSON.parse(execSync(`npm view ${pkgName}@${pkgVersion} dist-tags --json`, {
+    env: {
+      ...process.env,
+      ZB_TOKEN: process.env.ZB_TOKEN
+    }
+  }));
+  console.info(`Found dist tags ${JSON.stringify(distTags, null, 2)}`);
 
   // find and extract the package
   const tarballName = fs.readdirSync(tmpDir).find((f) => f.endsWith('.tgz'));
