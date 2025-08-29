@@ -1,0 +1,23 @@
+{
+  "name": "@zerobias-org/kb-actions-generate-kb",
+  "version": "0.0.1",
+  "description": "Use hugo to generate an article from markdown and resources in a module, etc",
+  "main": "dist/index.js",
+  "keywords": [],
+  "author": "team@zerobias.com",
+  "license": "ISC",
+  "scripts": {
+    "build": "ncc build src/index.js",
+    "clean": "rimraf dist/index.js"
+  },
+  "dependencies": {
+    "@auditmation/util-logger": "^4.0.3",
+    "@aws-sdk/client-lambda": "^3.501.0"
+  },
+  "devDependencies": {
+    "rimraf": "^3.0.2"
+  },
+  "files": [
+    "bom.json"
+  ]
+}

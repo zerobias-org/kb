@@ -1,0 +1,35 @@
+{
+  "name": "__PACKAGE_NAME__",
+  "version": "__VERSION__",
+  "description": "This is a connection guide to __DESCRIPTION__",
+  "author": "ci@zerobias.com",
+  "license": "UNLICENSED",
+  "main": "_index.md",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:zerobias-org/kb.git"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com/"
+  },
+  "auditmation": {
+    "package": "__DATALOADER_PACKAGE__",
+    "import-artifact": "kb",
+    "dataloader-version": "3.7.5"
+  },
+  "files": [
+    "resources/**",
+    "_index.md",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "hugo --source \"$(git rev-parse --show-toplevel)\" --contentDir \"$(pwd)\" --destination \"$(pwd)/public\"",
+    "clean": "rm -rf public",
+    "start": "hugo server --disableFastRender --source $(git rev-parse --show-toplevel) --contentDir $(pwd)",
+    "test": "npm run build",
+    "test:integration": "dataloader"
+  },
+  "dependencies": {
+    "__CONTENT_PACKAGE__": "^__CONTENT_VERSION__"
+  }
+}

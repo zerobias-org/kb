@@ -1,0 +1,114 @@
+name: Generate KB
+on:
+  repository_dispatch:
+    types:
+      - generate-kb
+
+permissions:
+  contents: write
+  id-token: write
+  packages: write
+  pull-requests: write
+
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  ZB_TOKEN: ${{ secrets.ZB_TOKEN }}
+
+jobs:
+  generate-kb:
+    name: 'Generate KB'
+    runs-on: 'ubuntu-latest'
+    strategy:
+      max-parallel: 4
+      fail-fast: false
+      matrix:
+        package: ${{ github.event.client_payload.packages }}
+    steps: 
+    - name: check out code
+      uses: actions/checkout@v3
+
+    - name: setup node
+      uses: actions/setup-node@v3
+      with:
+        node-version-file: '.nvmrc'
+
+    - name: Setup Hugo
+      uses: peaceiris/actions-hugo@v2
+      with:
+        hugo-version: '0.110.0'
+        extended: true
+
+    - name: configure aws tools creds
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        role-to-assume: arn:aws:iam::961260934100:role/github-actions-publishing-role
+        role-session-name: ${{ github.event.repository.name }}
+        aws-region: us-east-1
+
+    - name: Import Secrets
+      uses: hashicorp/vault-action@v2.4.3
+      with:
+        method: jwt
+        url: https://vault.auditmation.io:8200
+        role: publishing-role
+        path: gh-actions
+        secrets: |
+          operations-kv/data/ci/github readPackagesToken | READ_TOKEN;
+          operations-kv/data/ci/slack releasesWebhook | SLACK_RELEASES_WEBHOOK ;
+          operations-kv/data/ci/github writePackagesToken | WRITE_TOKEN;
+
+    - name: Bootstrap
+      shell: bash
+      run: |
+        npm ci
+        cd actions/generate-kb && npm ci
+      env:
+        ZB_TOKEN: ${{ env.ZB_TOKEN }}
+
+    - name: Generate and publish
+      shell: bash
+      run: |
+        node actions/generate-kb/src/index.js ${{ matrix.package }}
+      env:
+        CODE_PREFIX: ${{ github.event.client_payload.code_prefix }}
+        TITLE_PREFIX: ${{ github.event.client_payload.title_prefix }}
+        TAG_ONLY: ${{ github.event.client_payload.tag_only }}
+
+    - name: Generate Slack Message 
+      id: generateSlackMessage
+      shell: bash
+      run: |
+        touch slackmessage
+        echo "SLACK_MESSAGE<<EOF" >> $GITHUB_ENV
+        PKG=$(echo ${{ matrix.package }} | sed s/module-/kb-${{ github.event.client_payload.code_prefix }}-/)
+        echo $PKG >> slackmessage
+        echo "$(npm view $PKG dist-tags --json | jq -cr)" >> slackmessage
+        cat slackmessage
+        cat slackmessage >> $GITHUB_ENV
+        echo "EOF" >> $GITHUB_ENV
+      env:
+        NPM_TOKEN: ${{ env.READ_TOKEN }}
+        ZB_TOKEN: ${{ env.ZB_TOKEN }}
+
+    - name: Slack Notification
+      uses: rtCamp/action-slack-notify@master
+      if: ${{ env.SLACK_MESSAGE != '' }}
+      env:
+        SLACK_COLOR: good
+        SLACK_WEBHOOK: ${{ env.SLACK_RELEASES_WEBHOOK }}
+        SLACK_ICON_EMOJI: ':robot:'
+        MSG_MINIMAL: 'true'
+        SLACK_TITLE: ':gear: new ${{ github.repository }} artifacts published :tada:'
+        SLACK_MESSAGE: '${{ env.SLACK_MESSAGE }}'
+        SLACK_FOOTER: ''
+
+    - name: Slack Notification
+      uses: rtCamp/action-slack-notify@master
+      if: failure()
+      env:
+        SLACK_WEBHOOK: ${{ env.SLACK_DEVOPS_NOTIFICATIONS }}
+        SLACK_ICON_EMOJI: ":fire"
+        MSG_MINIMAL: 'true'
+        SLACK_TITLE: ":fire: ${{ github.repository }} generate kb failed for ${{ matrix.package }}"
+        SLACK_MESSAGE: "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+        SLACK_COLOR: danger
