@@ -1,0 +1,22 @@
+baseURL = "http://localhost:1313"
+languageCode = "en-us"
+title = "Auditlogic Knowledge Base"
+theme = "doks"
+ignoreFiles = [
+  ".*package\\.json$",
+  ".*package-lock\\.json$",
+  ".*npm-shrinkwrap\\.json$",
+  "package\\.json$",
+  "package-lock\\.json$",
+  "npm-shrinkwrap\\.json$",
+  "package/kb3-scf/update",
+  ".*README\\.md$",
+  "README\\.md$",
+  ".*CHANGELOG\\.md$",
+  "CHANGELOG\\.md$",
+  ".*node_modules.*"
+]
+enableGitInfo = true
+
+[frontmatter]
+lastmod = [':git', ':fileModTime', 'lastmod']

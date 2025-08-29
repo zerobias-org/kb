@@ -21,10 +21,12 @@ if (tagOnly) {
   console.info('Starting publish job');
 }
 
-const npmrc = `@auditmation:registry=https://pkg.zerobias.org
+const npmrc = `
+@auditmation:registry=https://pkg.zerobias.org
 @auditlogic:registry=https://pkg.zerobias.org
 @zerobias-org:registry=https://pkg.zerobias.org
-//pkg.zerobias.org/:_authToken=\${ZB_TOKEN}`;
+//pkg.zerobias.org/:_authToken=\${ZB_TOKEN}
+`;
 
 function copyAndReplaceFunc(pkgDir) {
   /* Substitutions:
@@ -79,7 +81,6 @@ async function publishReleaseEvent(kbDir) {
   const distTags = JSON.parse(execSync(`npm view ${name}@${version} dist-tags --json`, {
     env: {
       ...process.env,
-      NPM_TOKEN: process.env.READ_TOKEN,
       ZB_TOKEN: process.env.ZB_TOKEN
     }
   }));
@@ -119,6 +120,14 @@ async function main() {
     ZB_TOKEN: process.env.ZB_TOKEN
   };
 
+  const distTags = JSON.parse(execSync(`npm view ${pkgName}@${pkgVersion} dist-tags --json`, {
+    env: {
+      ...process.env,
+      ZB_TOKEN: process.env.ZB_TOKEN
+    }
+  }));
+  console.info(`Found dist tags ${JSON.stringify(distTags, null, 2)}`);
+
   // install target module to extract API
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'zerobiasorg-'));
   execOptions.cwd = tmpDir;
@@ -131,14 +140,6 @@ async function main() {
   // download the package
   spawnSync('npm', ['pack', '--silent', `${pkgName}@${pkgVersion}`], execOptions);
   console.info(`Directory listing for ${tmpDir}: ${fs.readdirSync(tmpDir)}`);
-
-  const distTags = JSON.parse(execSync(`npm view ${pkgName}@${pkgVersion} dist-tags --json`, {
-    env: {
-      ...process.env,
-      ZB_TOKEN: process.env.ZB_TOKEN
-    }
-  }));
-  console.info(`Found dist tags ${JSON.stringify(distTags, null, 2)}`);
 
   // find and extract the package
   const tarballName = fs.readdirSync(tmpDir).find((f) => f.endsWith('.tgz'));
@@ -191,7 +192,6 @@ async function main() {
     console.info('Running npm publish');
     execOptions.env = {
       ...process.env,
-      NPM_TOKEN: process.env.GITHUB_TOKEN,
       ZB_TOKEN: process.env.ZB_TOKEN
     };
     const publishTag = distTags['latest'] === pkgVersion ? 'latest' : 'dev';
@@ -211,7 +211,6 @@ async function main() {
   console.info(`Checking dist tags for ${pkgScope}/${kbPkgName}@${pkgVersion}`);
   execOptions.env = {
     ...process.env,
-    NPM_TOKEN: process.env.WRITE_TOKEN,
     ZB_TOKEN: process.env.ZB_TOKEN
   };
   for (let tag in distTags) {

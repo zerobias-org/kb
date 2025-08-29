@@ -1,0 +1,9 @@
+{{- $u := urls.Parse .Destination -}}
+<a href="{{ .Destination | safeURL }}"
+  {{- with .Title }} title="{{ . }}"{{ end -}}
+  {{- if $u.IsAbs }} target="_blank" {{ end -}}
+  onClick="sendNavMessage('{{ .Destination | safeURL }}')"
+>
+  {{- with .Text | safeHTML }}{{ . }}{{ end -}}
+
+</a>

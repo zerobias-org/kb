@@ -1,0 +1,32 @@
+{{ define "main" }}
+<div class="row justify-content-center">
+  <div class="col-md-12 col-lg-12 col-xl-12">
+    <article>
+      <h1>{{ .Title }}</h1>
+      <div>{{ .Content }}</div>
+			<!-- <div class="card-list">
+				{{ $currentSection := .CurrentSection }}
+				{{ range where .Site.RegularPages.ByTitle "Section" .Section }}
+					{{ if in (.RelPermalink | string) $currentSection.RelPermalink }}
+						<div class="card my-3">
+							<div class="card-body">
+								<a class="stretched-link" href="{{ .RelPermalink }}">{{ .Params.title | title }} &rarr;</a>
+							</div>
+						</div>
+					{{ end }}
+				{{ end }}
+			</div> -->
+    </article>
+  </div>
+
+  <nav class="docs-toc{{ if ne .Site.Params.options.navbarSticky true }} docs-toc-top{{ end }} d-none d-xl-block col-xl-3" aria-label="Secondary navigation">
+    {{ partial "sidebar/docs-toc.html" . }}
+  </nav>
+  <nav class="d-xl-none" aria-label="Quaternary navigation">
+    {{ partial "sidebar/docs-toc.html" . }}
+  </nav>
+</div>
+{{ if .Params.tableColumnWidth }}
+  {{ partial "css/table.html" .Params.tableColumnWidth }}
+{{ end }}
+{{ end }}

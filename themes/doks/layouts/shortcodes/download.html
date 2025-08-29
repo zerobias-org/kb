@@ -1,0 +1,6 @@
+{{- with .Get 0 -}}
+  <a href="{{ . }}" download>{{ . }}</a>
+  <br/>
+{{- else -}}
+  {{- errorf "The %s shortcode requires a single positional parameter, a URL. See %s" .Name .Position -}}
+{{- end -}}

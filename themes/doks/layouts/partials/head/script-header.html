@@ -1,0 +1,34 @@
+{{ if .Site.Params.options.darkMode -}}
+  {{ $darkModeInit := resources.Get "js/darkmode-init.js" | js.Build | minify -}}
+  <script>{{ $darkModeInit.Content | safeJS }}</script>
+{{ end -}}
+{{- if and (.Site.Params.alert) (.Site.Params.alertDismissable) -}}
+  {{ $alertInit := resources.Get "js/alert-init.js" | js.Build | minify -}}
+  <script>{{ $alertInit.Content | safeJS }}</script>
+{{- end -}}
+<script>
+  function sendNavMessage(href, absHref) {
+    let code = href.split('/').find((ref) => ref.startsWith('kb'));
+    let msg = {
+      type: 'KBNavClick',
+      code,
+      href,
+      absHref,
+      fromTitle: document.title,
+      fromUrl: document.URL,
+    };
+    console.log('Sending onclick message', msg);
+    window.parent.postMessage(msg, '*');
+  };
+
+  window.addEventListener('load', () => {
+    let msg = {
+      type: 'KBNavLoad',
+      code: {{ .Site.Data.kb.code }},
+      title: document.title,
+      url: document.URL,
+    };
+    console.log('Sending onload message', msg);
+    window.parent.postMessage(msg, '*');
+  });
+</script>
