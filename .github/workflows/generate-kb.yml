@@ -80,7 +80,8 @@ jobs:
       run: |
         touch slackmessage
         echo "SLACK_MESSAGE<<EOF" >> $GITHUB_ENV
-        PKG=$(echo ${{ matrix.package }} | sed s/module-/kb-${{ github.event.client_payload.code_prefix }}-/)
+        CODE="${{ github.event.client_payload.code_prefix }}$(echo ${{ matrix.package }} | sed 's/.*module-//' | sed 's/-//g')"
+        PKG=$(echo ${{ matrix.package }} | sed "s/module-/kb-${CODE}-/")
         echo $PKG >> slackmessage
         echo "$(npm view $PKG dist-tags --json | jq -cr)" >> slackmessage
         cat slackmessage
