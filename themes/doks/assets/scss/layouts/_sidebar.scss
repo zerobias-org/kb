@@ -82,7 +82,7 @@ a.docs-link {
   color: $body-color;
   display: block;
   padding: 0.125rem 0;
-  font-size: $font-size-base * 0.9375;
+  font-size: calc(var(--size-base, #{$font-size-base}) * 0.9375);
 }
 
 .docs-link:hover,
