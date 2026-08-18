@@ -1,30 +1,65 @@
-{{ if .Site.Params.options.darkMode -}}
-  {{ $darkModeInit := resources.Get "js/darkmode-init.js" | js.Build | minify -}}
-  <script>{{ $darkModeInit.Content | safeJS }}</script>
-{{ end -}}
+{{/*
+  theme-init.js initialises how the document presents itself before first paint:
+  the parent-controlled dark mode, and the app-root embedding flag that selects
+  base_zb.css's type scale. Emitted unconditionally rather than behind
+  params.options.darkMode — the embedding flag is not a dark-mode concern, and
+  gating it there would silently drop the type scale if dark mode were turned off.
+*/}}
+{{ $themeInit := resources.Get "js/theme-init.js" | js.Build | minify -}}
+<script>{{ $themeInit.Content | safeJS }}</script>
 {{- if and (.Site.Params.alert) (.Site.Params.alertDismissable) -}}
   {{ $alertInit := resources.Get "js/alert-init.js" | js.Build | minify -}}
   <script>{{ $alertInit.Content | safeJS }}</script>
 {{- end -}}
 <script>
-  function sendNavMessage(href, absHref) {
-    let code = href.split('/').find((ref) => ref.startsWith('kb'));
-    let msg = {
+  /**
+   * Pull a KB article code (kb9, kb236, …) out of a link target.
+   *
+   * Anchored on /^kb\d+$/ per path segment rather than startsWith('kb'), which matched any
+   * segment merely beginning with those two letters — an external link to .../kbase/x read as
+   * the article "kbase" and emitted a bogus code.
+   */
+  function kbCodeFromHref(href) {
+    var segments = String(href || '').split(/[\/?#]/);
+    for (var i = 0; i < segments.length; i++) {
+      if (/^kb\d+$/.test(segments[i])) { return segments[i]; }
+    }
+    return null;
+  }
+
+  /**
+   * Hand an in-article link to the embedding app instead of following it in place.
+   *
+   * Returns false (and prevents the default) ONLY when both are true: we are inside an iframe,
+   * and the target resolves to a KB article. Otherwise the link behaves normally — which is what
+   * keeps external links working and keeps a standalone article (opened directly from the CDN,
+   * with no parent to talk to) fully navigable.
+   *
+   * Why intercept at all: letting the iframe follow the link changes the article without telling
+   * the parent, so the app's rail, address bar and nav state silently desync from what is on
+   * screen. The parent re-points the iframe itself once it has updated its own state.
+   */
+  function sendNavMessage(href, absHref, event) {
+    var code = kbCodeFromHref(href);
+    var embedded = window.self !== window.top;
+    if (!embedded || !code) { return true; }
+    var msg = {
       type: 'KBNavClick',
-      code,
-      href,
-      absHref,
+      code: code,
+      href: href,
+      absHref: absHref,
       fromTitle: document.title,
       fromUrl: document.URL,
     };
-    console.log('Sending onclick message', msg);
     window.parent.postMessage(msg, '*');
+    if (event && event.preventDefault) { event.preventDefault(); }
+    return false;
   };
 
   window.addEventListener('load', () => {
     let msg = {
       type: 'KBNavLoad',
-      code: {{ .Site.Data.kb.code }},
+      code: {{ hugo.Data.kb.code }},
       title: document.title,
       url: document.URL,
     };

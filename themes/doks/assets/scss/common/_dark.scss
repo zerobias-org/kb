@@ -331,42 +331,12 @@ $navbar-dark-active-color:          $link-color-dark;
   border-top: 1px solid $border-dark;
 }
 
-[data-dark-mode] body .docs-links,
-[data-dark-mode] body .docs-toc {
-  scrollbar-width: thin;
-  scrollbar-color: $body-bg-dark $body-bg-dark;
-}
-
-[data-dark-mode] body .docs-links::-webkit-scrollbar,
-[data-dark-mode] body .docs-toc::-webkit-scrollbar {
-  width: 5px;
-}
-
-[data-dark-mode] body .docs-links::-webkit-scrollbar-track,
-[data-dark-mode] body .docs-toc::-webkit-scrollbar-track {
-  background: $body-bg-dark;
-}
-
-[data-dark-mode] body .docs-links::-webkit-scrollbar-thumb,
-[data-dark-mode] body .docs-toc::-webkit-scrollbar-thumb {
-  background: $body-bg-dark;
-}
-
-[data-dark-mode] body .docs-links:hover,
-[data-dark-mode] body .docs-toc:hover {
-  scrollbar-width: thin;
-  scrollbar-color: $border-dark $body-bg-dark;
-}
-
-[data-dark-mode] body .docs-links:hover::-webkit-scrollbar-thumb,
-[data-dark-mode] body .docs-toc:hover::-webkit-scrollbar-thumb {
-  background: $border-dark;
-}
-
-[data-dark-mode] body .docs-links::-webkit-scrollbar-thumb:hover,
-[data-dark-mode] body .docs-toc::-webkit-scrollbar-thumb:hover {
-  background: $border-dark;
-}
+/* The dark rail-scrollbar block that stood here is gone. It duplicated the light
+ * block in Doks' own dark palette, and at `[data-dark-mode] body .docs-links`
+ * (0,2,1) it outranked anything a later stylesheet could say with a plain class
+ * selector — so a served override looked correct in light and silently did
+ * nothing in dark. The light block in `_sidebar.scss` is now tokenised on
+ * --scrollbar-*, which swap with the theme in base_zb.css and cover both. */
 
 [data-dark-mode] body .docs-links h3:not(:first-child) {
   border-top: 1px solid $border-dark;

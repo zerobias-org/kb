@@ -3,7 +3,8 @@ disableAliases = true
 disableHugoGeneratorInject = true
 enableEmoji = true
 enableRobotsTXT = true
-paginate = 7
+[pagination]
+  pagerSize = 7
 rssLimit = 10
 
 # Multilingual
@@ -45,7 +46,7 @@ noUgly = true
 rel  = "sitemap"
 
 [caches]
-  [caches.getjson]
+  [caches.getresource]
     dir = ":cacheDir/:project"
     maxAge = "10s"
 

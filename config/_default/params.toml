@@ -10,7 +10,11 @@ description = ""
 # docsVersion = "0.3"
 
 ## Open Graph
-images = ["auditmation.png"]
+# The share card for og:image / twitter:image, as a FULL CDN URL rather than a
+# filename. The old value was a bare filename, which the templates resolved
+# against the per-article baseURL to .../ct/dev/ctgithubgithub/<file> — a file
+# nothing emits, so every link preview requested a 404 and rendered no card.
+images = ["https://cdn.zerobias.com/static/images/zerobias/zerobias-og-card.png"]
 ogLocale = "en_US"
 domainTLD = "doks.netlify.app"
 titleHome = "ZeroBias"
@@ -31,7 +35,7 @@ schemaLocale = "en-US"
 schemaLogo = "nf_favicon.png"
 schemaLogoWidth = 512
 schemaLogoHeight = 512
-schemaImage = "auditmation.png"
+schemaImage = "zerobias.png"
 schemaImageWidth = 1280
 schemaImageHeight = 640
 schemaTwitter = ""

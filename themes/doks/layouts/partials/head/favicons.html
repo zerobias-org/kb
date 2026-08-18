@@ -1,5 +1,14 @@
 <meta name="theme-color" content="{{ $.Site.Params.themeColor }}">
-<link rel="icon" href="{{ "favicon.ico" | absURL }}" sizes="any">
+{{/*
+  The platform favicon, served from the CDN. This is the same URL the portal uses
+  (projects/portal/src/index.html in zb/com/ui) and the v2 example app
+  (package/zerobias/example-nextjs-v2/src/app/layout.tsx), so an article opened
+  standalone carries the same mark as the app it belongs to.
+
+  Was `{{ "favicon.ico" | absURL }}`, which resolves against the per-article
+  baseURL — .../kb/dev/kb9/favicon.ico — a file the article does not ship.
+*/}}
+<link rel="icon" type="image/png" href="https://cdn.zerobias.com/static/images/zerobias/favicon.png">
 <!-- {{ if os.FileExists "static/favicon.svg" -}}
   <link rel="icon" type="image/svg+xml" href="{{ "favicon.svg" | absURL }}">
 {{ end -}}

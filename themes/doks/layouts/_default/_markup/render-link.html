@@ -2,7 +2,7 @@
 <a href="{{ .Destination | safeURL }}"
   {{- with .Title }} title="{{ . }}"{{ end -}}
   {{- if $u.IsAbs }} target="_blank" {{ end -}}
-  onClick="sendNavMessage('{{ .Destination | safeURL }}')"
+  onClick="return sendNavMessage('{{ .Destination | safeURL }}', '{{ .Destination | absURL }}', event)"
 >
   {{- with .Text | safeHTML }}{{ . }}{{ end -}}
 
