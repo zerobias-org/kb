@@ -13,18 +13,36 @@
 {{- end -}}
 <script>
   /**
-   * Pull a KB article code (kb9, kb236, …) out of a link target.
+   * Pull an article code (kb9, kb236, ctgithubgithub, …) out of a link target.
    *
-   * Anchored on /^kb\d+$/ per path segment rather than startsWith('kb'), which matched any
-   * segment merely beginning with those two letters — an external link to .../kbase/x read as
-   * the article "kbase" and emitted a bogus code.
+   * ⚠ THIS MUST AGREE WITH THE PARENT, NOT MERELY BE CORRECT ON ITS OWN. Whatever this
+   * returns, the embedding app then resolves with its own extractKbCode
+   * (zb-ui-lib kb-articles.service.ts), and kbViewer keys the same way in getType(). If
+   * this said yes where the parent says no, the click would be swallowed: preventDefault
+   * fires, the parent finds no article, and the link does nothing at all. So this mirrors
+   * the parent's algorithm deliberately — last path segment with the document filename
+   * dropped, tested against /^(kb|ct)/i — rather than inventing a third rule.
+   *
+   * It used to be /^kb\d+$/ scanned across every segment, which was correct for kb and
+   * silently wrong for ct. Connect-To codes are 'ct' + the module name with dashes
+   * stripped (module-github-github -> ctgithubgithub, module-amazon-aws-s3 ->
+   * ctamazonawss3), so they carry no digits in the kb sense and never matched. In THIS
+   * repo, whose entire output is ct articles, that meant the handler could not fire at
+   * all: every ct -> ct link fell through to a plain in-iframe navigation, leaving the
+   * app's rail, breadcrumb and address bar pointing at the previous article.
+   *
+   * Taking the LAST segment rather than scanning all of them also fixes the case the old
+   * per-segment scan was written for: an external link to .../kbase/x now reads its last
+   * segment ('x') instead of matching 'kbase' partway along the path.
    */
   function kbCodeFromHref(href) {
-    var segments = String(href || '').split(/[\/?#]/);
-    for (var i = 0; i < segments.length; i++) {
-      if (/^kb\d+$/.test(segments[i])) { return segments[i]; }
+    var path = String(href || '').split(/[?#]/)[0];
+    var segments = path.split('/').filter(function (segment) { return segment.length > 0; });
+    if (segments.length > 0 && /\.html?$/i.test(segments[segments.length - 1])) {
+      segments.pop();
     }
-    return null;
+    var candidate = segments.length > 0 ? segments[segments.length - 1] : null;
+    return candidate && /^(kb|ct)/i.test(candidate) ? candidate : null;
   }
 
   /**
