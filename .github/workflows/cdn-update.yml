@@ -54,6 +54,16 @@ jobs:
         role-session-name: ${{ github.event.repository.name }}
         aws-region: us-east-1
 
+    - name: Import Secrets
+      uses: hashicorp/vault-action@v2.4.3
+      with:
+        method: jwt
+        url: https://vault.auditmation.io:8200
+        role: publishing-role
+        path: gh-actions
+        secrets: |
+          operations-kv/data/ci/slack devopsNotifications | SLACK_DEVOPS_NOTIFICATIONS ;
+
     - name: Bootstrap
       shell: bash
       run: npm ci
@@ -71,3 +81,18 @@ jobs:
         REBUILD_LIST: ${{ inputs.rebuild_list }}
         CODE_PREFIX: ${{ inputs.code_prefix }}
         ZB_TOKEN: ${{ env.ZB_TOKEN }}
+
+    # A manual workflow is easy to not notice failing, and the failure that matters
+    # here is the credential window expiring midway: the run dies with ExpiredToken
+    # having synced some articles and not others, so the fleet is left half-updated
+    # in a state no one is watching for.
+    - name: Slack Notification
+      uses: rtCamp/action-slack-notify@master
+      if: failure()
+      env:
+        SLACK_WEBHOOK: ${{ env.SLACK_DEVOPS_NOTIFICATIONS }}
+        SLACK_ICON_EMOJI: ":fire"
+        MSG_MINIMAL: 'true'
+        SLACK_TITLE: ":fire: ${{ github.repository }} cdn update failed"
+        SLACK_MESSAGE: "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+        SLACK_COLOR: danger

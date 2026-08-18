@@ -1,79 +1,25 @@
 {{ $indexTemplate := resources.Get "js/index.js" -}}
 {{ $index := $indexTemplate | resources.ExecuteAsTemplate "index.js" . -}}
 
-{{ $bs := resources.Get "js/bootstrap.js" -}}
-{{ $bs := $bs | js.Build -}}
-
-{{ $highlight := resources.Get "js/highlight.js" -}}
-{{ $highlight := $highlight | js.Build -}}
-
+{{ $bs := resources.Get "js/bootstrap.js" | js.Build -}}
+{{ $highlight := resources.Get "js/highlight.js" | js.Build -}}
 {{ $katex := resources.Get "js/vendor/katex/dist/katex.js" -}}
 {{ $katexAutoRender := resources.Get "js/vendor/katex/dist/contrib/auto-render.js" -}}
-
 {{ $mermaid := resources.Get "js/mermaid.js" | js.Build -}}
 
+{{/* Core bundle - always loaded */}}
 {{ $app := resources.Get "js/app.js" -}}
-
-{{ $slice := slice $app -}}
-
-{{ if .Site.Params.options.lazySizes -}}
-  {{ $lazySizes := resources.Get "js/lazysizes.js" -}}
-  {{ $lazySizes := $lazySizes | js.Build -}}
-  {{ $slice = $slice | append $lazySizes -}}
-{{ end -}}
-
-{{ if .Site.Params.options.clipBoard -}}
-  {{ $clipBoard := resources.Get "js/clipboard.js" -}}
-  {{ $clipBoard := $clipBoard | js.Build -}}
-  {{ $slice = $slice | append $clipBoard -}}
-{{ end -}}
-
-{{ if .Site.Params.options.instantPage -}}
-  {{ $instantPage := resources.Get "js/instant.page.js" -}}
-  {{ $instantPage := $instantPage | js.Build -}}
-  {{ $slice = $slice | append $instantPage -}}
-{{ end -}}
-
-{{ $showFlexSearch := .Site.Params.options.flexSearch }}
-
-{{ if $showFlexSearch -}}
-  {{ $flexSearch := resources.Get "js/vendor/flexsearch/dist/flexsearch.bundle.js" -}}
-  {{ $slice = $slice | append $flexSearch -}}
-  {{ if and (isset .Site.Params.options "searchsectionsshow") (not (eq .Site.Params.options.searchSectionsShow "ALL")) -}}
-  {{ $showFlexSearch = or (eq (len .Site.Params.options.searchSectionsShow) 0) (in .Site.Params.options.searchSectionsShow .Section) (and .IsHome (in .Site.Params.options.searchSectionsShow "HomePage")) -}}
-  {{ end -}}
-{{ end -}}
-
-{{ if .Site.Params.options.darkMode -}}
-  {{ $darkMode := resources.Get "js/darkmode.js" -}}
-  {{ $darkMode := $darkMode | js.Build -}}
-  {{ $slice = $slice | append $darkMode -}}
-{{ end -}}
-
-{{ if and (.Site.Params.alert) (.Site.Params.alertDismissable) -}}
-  {{ $alert := resources.Get "js/alert.js" -}}
-  {{ $alert := $alert | js.Build -}}
-  {{ $slice = $slice | append $alert -}}
-{{ end -}}
-
-{{ if .Site.Params.options.kaTex -}}
-  {{ $katexConfig := resources.Get "js/katex.js" -}}
-  {{ $katexConfig := $katexConfig | js.Build -}}
-  {{ $slice = $slice | append $katexConfig -}}
-{{ end -}}
-
 {{ $scrollLock := resources.Get "js/scroll-lock.js" | js.Build -}}
-{{ $slice = $slice | append $scrollLock -}}
+{{ $js := slice $app $scrollLock | resources.Concat "main.js" -}}
 
-{{ if .Site.Params.options.toTopButton -}}
-  {{ $toTopButton := resources.Get "js/to-top.js" -}}
-  {{ $toTopButton := $toTopButton | js.Build -}}
-  {{ $slice = $slice | append $toTopButton -}}
+{{/* Determine flexSearch visibility */}}
+{{ $showFlexSearch := .Site.Params.options.flexSearch -}}
+{{ if and (isset .Site.Params.options "searchsectionsshow") (not (eq .Site.Params.options.searchSectionsShow "ALL")) -}}
+  {{ $showFlexSearch = or (eq (len .Site.Params.options.searchSectionsShow) 0) (in .Site.Params.options.searchSectionsShow .Section) (and .IsHome (in .Site.Params.options.searchSectionsShow "HomePage")) -}}
 {{ end -}}
-
-{{ $js := $slice | resources.Concat "main.js" -}}
 
 {{ if eq (hugo.Environment) "development" -}}
+  {{/* Development: load unminified for debugging */}}
   {{ if .Site.Params.options.bootStrapJs -}}
     <script src="{{ $bs.RelPermalink }}" defer></script>
   {{ end -}}
@@ -85,20 +31,64 @@
     <script src="{{ $katexAutoRender.RelPermalink }}" onload="renderMathInElement(document.body);" defer></script>
   {{ end -}}
   <script src="{{ $js.RelPermalink }}" defer></script>
+  {{/* Optional features - only build when enabled */}}
+  {{ if .Site.Params.options.lazySizes -}}
+    {{ with resources.Get "js/lazysizes.js" | js.Build -}}
+      <script src="{{ .RelPermalink }}" defer></script>
+    {{ end -}}
+  {{ end -}}
+  {{ if .Site.Params.options.clipBoard -}}
+    {{ with resources.Get "js/clipboard.js" | js.Build -}}
+      <script src="{{ .RelPermalink }}" defer></script>
+    {{ end -}}
+  {{ end -}}
+  {{ if .Site.Params.options.instantPage -}}
+    {{ with resources.Get "js/instant.page.js" | js.Build -}}
+      <script src="{{ .RelPermalink }}" defer></script>
+    {{ end -}}
+  {{ end -}}
+  {{ if .Site.Params.options.darkMode -}}
+    {{ with resources.Get "js/darkmode.js" | js.Build -}}
+      <script src="{{ .RelPermalink }}" defer></script>
+    {{ end -}}
+  {{ end -}}
+  {{ if and (.Site.Params.alert) (.Site.Params.alertDismissable) -}}
+    {{ with resources.Get "js/alert.js" | js.Build -}}
+      <script src="{{ .RelPermalink }}" defer></script>
+    {{ end -}}
+  {{ end -}}
+  {{ if .Site.Params.options.kaTex -}}
+    {{ with resources.Get "js/katex.js" | js.Build -}}
+      <script src="{{ .RelPermalink }}" defer></script>
+    {{ end -}}
+  {{ end -}}
+  {{ if .Site.Params.options.toTopButton -}}
+    {{ with resources.Get "js/to-top.js" | js.Build -}}
+      <script src="{{ .RelPermalink }}" defer></script>
+    {{ end -}}
+  {{ end -}}
   {{ with .Params.mermaid -}}
     <script src="{{ $mermaid.RelPermalink }}" defer></script>
   {{ end -}}
   {{ if $showFlexSearch -}}
+    {{/* flexsearch 0.7 ships only flexsearch.bundle.js; the .min.js variant that
+         auditlogic/kb references arrived in 0.8. Pointing at a file this version does
+         not ship makes resources.Get return nil, and the fingerprint below then fails
+         the whole build rather than skipping the script. */}}
+    {{ with resources.Get "js/vendor/flexsearch/dist/flexsearch.bundle.js" -}}
+      <script src="{{ .RelPermalink }}" defer></script>
+    {{ end -}}
     <script src="{{ $index.RelPermalink }}" defer></script>
   {{ end -}}
 {{ else -}}
-  {{ $js := $js | minify | fingerprint "sha512" -}}
-  {{ $index := $index | minify | fingerprint "sha512" -}}
-  {{ $bs := $bs | minify | fingerprint "sha512" -}}
-  {{ $highlight := $highlight | minify | fingerprint "sha512" -}}
-  {{ $katex := $katex | minify | fingerprint "sha512" -}}
-  {{ $katexAutoRender := $katexAutoRender | minify | fingerprint "sha512" -}}
-  {{ $mermaid := $mermaid | minify | fingerprint "sha512" -}}
+  {{/* Production: minify and fingerprint for caching */}}
+  {{ $js = $js | minify | fingerprint "sha512" -}}
+  {{ $index = $index | minify | fingerprint "sha512" -}}
+  {{ $bs = $bs | minify | fingerprint "sha512" -}}
+  {{ $highlight = $highlight | minify | fingerprint "sha512" -}}
+  {{ $katex = $katex | minify | fingerprint "sha512" -}}
+  {{ $katexAutoRender = $katexAutoRender | minify | fingerprint "sha512" -}}
+  {{ $mermaid = $mermaid | minify | fingerprint "sha512" -}}
   {{ if .Site.Params.options.bootStrapJs -}}
     <script src="{{ $bs.RelPermalink }}" crossorigin="anonymous" defer></script>
   {{ end -}}
@@ -106,14 +96,55 @@
     <script src="{{ $highlight.RelPermalink }}" crossorigin="anonymous" defer></script>
   {{ end -}}
   {{ if .Site.Params.options.kaTex -}}
-    <script src="{{ $katex.RelPermalink }}"  crossorigin="anonymous" defer></script>
+    <script src="{{ $katex.RelPermalink }}" crossorigin="anonymous" defer></script>
     <script src="{{ $katexAutoRender.RelPermalink }}" crossorigin="anonymous" defer></script>
   {{ end -}}
   <script src="{{ $js.RelPermalink }}" crossorigin="anonymous" defer></script>
+  {{/* Optional features - only build/minify when enabled */}}
+  {{ if .Site.Params.options.lazySizes -}}
+    {{ with resources.Get "js/lazysizes.js" | js.Build | minify | fingerprint "sha512" -}}
+      <script src="{{ .RelPermalink }}" crossorigin="anonymous" defer></script>
+    {{ end -}}
+  {{ end -}}
+  {{ if .Site.Params.options.clipBoard -}}
+    {{ with resources.Get "js/clipboard.js" | js.Build | minify | fingerprint "sha512" -}}
+      <script src="{{ .RelPermalink }}" crossorigin="anonymous" defer></script>
+    {{ end -}}
+  {{ end -}}
+  {{ if .Site.Params.options.instantPage -}}
+    {{ with resources.Get "js/instant.page.js" | js.Build | minify | fingerprint "sha512" -}}
+      <script src="{{ .RelPermalink }}" crossorigin="anonymous" defer></script>
+    {{ end -}}
+  {{ end -}}
+  {{ if .Site.Params.options.darkMode -}}
+    {{ with resources.Get "js/darkmode.js" | js.Build | minify | fingerprint "sha512" -}}
+      <script src="{{ .RelPermalink }}" crossorigin="anonymous" defer></script>
+    {{ end -}}
+  {{ end -}}
+  {{ if and (.Site.Params.alert) (.Site.Params.alertDismissable) -}}
+    {{ with resources.Get "js/alert.js" | js.Build | minify | fingerprint "sha512" -}}
+      <script src="{{ .RelPermalink }}" crossorigin="anonymous" defer></script>
+    {{ end -}}
+  {{ end -}}
+  {{ if .Site.Params.options.kaTex -}}
+    {{ with resources.Get "js/katex.js" | js.Build | minify | fingerprint "sha512" -}}
+      <script src="{{ .RelPermalink }}" crossorigin="anonymous" defer></script>
+    {{ end -}}
+  {{ end -}}
+  {{ if .Site.Params.options.toTopButton -}}
+    {{ with resources.Get "js/to-top.js" | js.Build | minify | fingerprint "sha512" -}}
+      <script src="{{ .RelPermalink }}" crossorigin="anonymous" defer></script>
+    {{ end -}}
+  {{ end -}}
   {{ with .Params.mermaid -}}
     <script src="{{ $mermaid.RelPermalink }}" crossorigin="anonymous" defer></script>
   {{ end -}}
   {{ if $showFlexSearch -}}
+    {{/* 0.7's bundle is not pre-minified, unlike the .min.js auditlogic/kb gets from
+         flexsearch 0.8 — minify before fingerprinting. */}}
+    {{ with resources.Get "js/vendor/flexsearch/dist/flexsearch.bundle.js" | minify | fingerprint "sha512" -}}
+      <script src="{{ .RelPermalink }}" crossorigin="anonymous" defer></script>
+    {{ end -}}
     <script src="{{ $index.Permalink }}" crossorigin="anonymous" defer></script>
   {{ end -}}
 {{ end -}}

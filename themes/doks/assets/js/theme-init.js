@@ -18,7 +18,15 @@ if (window.self !== window.top) {
   document.documentElement.setAttribute('app-root', '');
 }
 
+// Only the window that embedded this article may drive its theme. Checked by SOURCE
+// rather than by an origin allowlist on purpose: the legitimate embedders span four
+// portal environments, kbviewer and local dev, and a hardcoded list of those goes
+// stale silently — the failure mode is an article that stops following the app's
+// theme, with nothing in the console to say why. Comparing against window.parent
+// needs no list and cannot miss a valid embedder, while still ignoring anything
+// posted by another frame or window.
 window.addEventListener('message', function(event) {
+  if (event.source !== window.parent) { return; }
   if (event.data && event.data.type === 'theme_change') {
     if (event.data.isDark) {
       document.documentElement.setAttribute('data-dark-mode', '');

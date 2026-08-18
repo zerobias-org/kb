@@ -63,6 +63,7 @@ jobs:
         secrets: |
           operations-kv/data/ci/github readPackagesToken | READ_TOKEN;
           operations-kv/data/ci/slack releasesWebhook | SLACK_RELEASES_WEBHOOK ;
+          operations-kv/data/ci/slack devopsNotifications | SLACK_DEVOPS_NOTIFICATIONS ;
           operations-kv/data/ci/github writePackagesToken | WRITE_TOKEN;
 
     - name: Bootstrap

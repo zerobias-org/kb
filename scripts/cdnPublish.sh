@@ -105,6 +105,41 @@ if [ -n "$MISSING" ]; then
   exit 1
 fi
 
+# Drop anything flagged deprecated, the same way cdnUpdate.sh does for the kb fleet.
+# Measured 2026-08-18: NONE of the ct packages carry the flag, and nothing in the
+# generate-kb path sets it — this is insurance, not a fix for an observed case. It
+# matters because there is no delete path on the CDN (both pipelines sync without
+# --delete), so re-rendering a retired article silently refreshes content that is
+# supposed to be on its way out.
+#
+# The flag lives under whichever key the package uses: the dataloader reads
+# `zerobias ?? auditmation` and published ct articles exist in both shapes.
+#
+# Skips are LISTED, not silent. A named entry vanishing from a run without
+# explanation reads as a short run, which is what the abort above exists to prevent.
+if [ "${INCLUDE_DEPRECATED:-false}" != "true" ]; then
+  KEPT=""
+  SKIPPED=""
+  for package in $PACKAGES; do
+    DEPRECATED=$(npm view --json "$package" 2>/dev/null \
+      | jq -r '(.zerobias.deprecated // .auditmation.deprecated) // false' 2>/dev/null)
+    if [ "$DEPRECATED" = "true" ]; then
+      SKIPPED="$SKIPPED $package"
+    else
+      KEPT="$KEPT $package"
+    fi
+  done
+  if [ -n "$SKIPPED" ]; then
+    echo "Skipping $(printf '%s\n' $SKIPPED | grep -c .) deprecated package(s):$SKIPPED"
+  fi
+  PACKAGES=$(printf '%s' "$KEPT" | sed -E 's/^ +| +$//g')
+fi
+
+if [ -z "$PACKAGES" ]; then
+  echo "Every entry was deprecated — nothing to render."
+  exit 0
+fi
+
 echo "ct articles to re-render ($(printf '%s\n' $PACKAGES | grep -c .)):"
 printf '  %s\n' $PACKAGES
 
