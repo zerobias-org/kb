@@ -5,8 +5,9 @@
   (package/zerobias/example-nextjs-v2/src/app/layout.tsx), so an article opened
   standalone carries the same mark as the app it belongs to.
 
-  Was `{{ "favicon.ico" | absURL }}`, which resolves against the per-article
-  baseURL — .../kb/dev/kb9/favicon.ico — a file the article does not ship.
+  Was `{{ "favicon.ico" | absURL }}`, which resolved against the per-article baseURL
+  to .../ct/<code>/favicon.ico. That file IS shipped and does return 200, but it is
+  Doks' icon, not ours — every article was serving someone else's mark.
 */}}
 <link rel="icon" type="image/png" href="https://cdn.zerobias.com/static/images/zerobias/favicon.png">
 <!-- {{ if os.FileExists "static/favicon.svg" -}}
