@@ -19,4 +19,4 @@ ignoreFiles = [
 enableGitInfo = true
 
 [frontmatter]
-lastmod = [':git', ':fileModTime', 'lastmod']
+lastmod = ['lastmod', ':git', ':fileModTime']
