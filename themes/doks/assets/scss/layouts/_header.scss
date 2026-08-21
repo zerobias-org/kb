@@ -138,15 +138,10 @@ button#doks-versions {
 }
 */
 
-.header-bar {
-  border-top: 4px solid;
-  border-image-source: linear-gradient(90deg, $primary, #8ed6fb 50%, $primary);
-  border-image-slice: 1;
-}
-
-.offcanvas .header-bar {
-  margin-bottom: -4px;
-}
+/* The .header-bar gradient rule and its .offcanvas variant were removed along with
+   the three <div class="header-bar"> elements in partials/header/header.html. It
+   painted a 4px blue gradient stripe across the top of every article, which is
+   Doks branding rather than ours and reads as a stray artifact inside the embed. */
 
 .home .navbar {
   border-bottom: 0;

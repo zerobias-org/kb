@@ -1,30 +1,123 @@
-{{ if .Site.Params.options.darkMode -}}
-  {{ $darkModeInit := resources.Get "js/darkmode-init.js" | js.Build | minify -}}
-  <script>{{ $darkModeInit.Content | safeJS }}</script>
-{{ end -}}
+{{/*
+  ⚠ THIS THEME IS VENDORED IN TWO REPOSITORIES. CHANGE BOTH, IN THE SAME BREATH.
+
+    auditlogic/kb    themes/doks/   -> the kb fleet, and ct articles built from
+                                      @auditlogic/module-* packages
+    zerobias-org/kb  themes/doks/   -> ct articles built from @zerobias-org/module-*
+
+  They are separate copies with no sync mechanism and no shared owner. Both render into
+  the same /kb/ and /ct/ CDN namespaces, so a fix applied to one leaves the other's
+  articles serving the old behaviour — and nothing anywhere reports the gap.
+
+  This is not hypothetical. It is how the ct link-interception bug survived being
+  "fixed": the handler was corrected in one copy and stayed broken in the other. It is
+  also how the og:image 404 was fixed, verified, and still live for every ct article.
+
+  Sync direction is auditlogic/kb -> zerobias-org/kb. Copying the other way rolls back
+  theme work that only exists in auditlogic.
+
+  A rendered article is static HTML: nothing here reaches the CDN until the articles are
+  re-rendered, in BOTH pipelines.
+
+  -- The two tickets named above --------------------------------------------------
+  ⚠ A task CODE is not unique. Codes are minted per board, so every board in every org
+  has its own task-269. The UUID is the only stable identity — resolve by that, and
+  treat a bare code in any doc or commit message as ambiguous until you have the UUID.
+
+  Both are on the ZeroBias PROD platform, https://app.zerobias.com, org "ZeroBias"
+  57c741cf-a58e-5efc-bf2f-93c4f6cf76ec, Platform boundary
+  14188507-e63d-402b-964d-2b50db5b783c:
+
+    ae296b38-523b-4ba3-a5d8-757b1b87bbe2   (shown there as task-269)
+      board: UI Bugs  8f0fbc2d-be4f-449b-be0c-50106f95b84b
+      "KB article only posts KBNavClick to the parent for 'kb' links, never 'ct'"
+      https://app.zerobias.com/resource/ae296b38-523b-4ba3-a5d8-757b1b87bbe2
+
+    9ec8f1ef-2fdb-42e9-a395-4a08d54ca81a   (shown there as task-254)
+      board: UI Feature Requests  5631d499-16cd-4767-96c2-177650d780fd
+      "Fix Slack/OpenGraph link previews for KB articles (og:url and og:image both 404)"
+      https://app.zerobias.com/resource/9ec8f1ef-2fdb-42e9-a395-4a08d54ca81a
+*/}}
+{{/*
+  theme-init.js initialises how the document presents itself before first paint:
+  the parent-controlled dark mode, and the app-root embedding flag that selects
+  base_zb.css's type scale. Emitted unconditionally rather than behind
+  params.options.darkMode — the embedding flag is not a dark-mode concern, and
+  gating it there would silently drop the type scale if dark mode were turned off.
+*/}}
+{{ $themeInit := resources.Get "js/theme-init.js" | js.Build | minify -}}
+<script>{{ $themeInit.Content | safeJS }}</script>
 {{- if and (.Site.Params.alert) (.Site.Params.alertDismissable) -}}
   {{ $alertInit := resources.Get "js/alert-init.js" | js.Build | minify -}}
   <script>{{ $alertInit.Content | safeJS }}</script>
 {{- end -}}
 <script>
-  function sendNavMessage(href, absHref) {
-    let code = href.split('/').find((ref) => ref.startsWith('kb'));
-    let msg = {
+  /**
+   * Pull an article code (kb9, kb236, ctgithubgithub, …) out of a link target.
+   *
+   * ⚠ THIS MUST AGREE WITH THE PARENT, NOT MERELY BE CORRECT ON ITS OWN. Whatever this
+   * returns, the embedding app then resolves with its own extractKbCode
+   * (zb-ui-lib kb-articles.service.ts), and kbViewer keys the same way in getType(). If
+   * this said yes where the parent says no, the click would be swallowed: preventDefault
+   * fires, the parent finds no article, and the link does nothing at all. So this mirrors
+   * the parent's algorithm deliberately — last path segment with the document filename
+   * dropped, tested against /^(kb|ct)/i — rather than inventing a third rule.
+   *
+   * It used to be /^kb\d+$/ scanned across every segment, which was correct for kb and
+   * silently wrong for ct. Connect-To codes are 'ct' + the module name with dashes
+   * stripped (module-github-github -> ctgithubgithub, module-amazon-aws-s3 ->
+   * ctamazonawss3), so they carry no digits in the kb sense and never matched. In THIS
+   * repo, whose entire output is ct articles, that meant the handler could not fire at
+   * all: every ct -> ct link fell through to a plain in-iframe navigation, leaving the
+   * app's rail, breadcrumb and address bar pointing at the previous article.
+   *
+   * Taking the LAST segment rather than scanning all of them also fixes the case the old
+   * per-segment scan was written for: an external link to .../kbase/x now reads its last
+   * segment ('x') instead of matching 'kbase' partway along the path.
+   */
+  function kbCodeFromHref(href) {
+    var path = String(href || '').split(/[?#]/)[0];
+    var segments = path.split('/').filter(function (segment) { return segment.length > 0; });
+    if (segments.length > 0 && /\.html?$/i.test(segments[segments.length - 1])) {
+      segments.pop();
+    }
+    var candidate = segments.length > 0 ? segments[segments.length - 1] : null;
+    return candidate && /^(kb|ct)/i.test(candidate) ? candidate : null;
+  }
+
+  /**
+   * Hand an in-article link to the embedding app instead of following it in place.
+   *
+   * Returns false (and prevents the default) ONLY when both are true: we are inside an iframe,
+   * and the target resolves to a KB article. Otherwise the link behaves normally — which is what
+   * keeps external links working and keeps a standalone article (opened directly from the CDN,
+   * with no parent to talk to) fully navigable.
+   *
+   * Why intercept at all: letting the iframe follow the link changes the article without telling
+   * the parent, so the app's rail, address bar and nav state silently desync from what is on
+   * screen. The parent re-points the iframe itself once it has updated its own state.
+   */
+  function sendNavMessage(href, absHref, event) {
+    var code = kbCodeFromHref(href);
+    var embedded = window.self !== window.top;
+    if (!embedded || !code) { return true; }
+    var msg = {
       type: 'KBNavClick',
-      code,
-      href,
-      absHref,
+      code: code,
+      href: href,
+      absHref: absHref,
       fromTitle: document.title,
       fromUrl: document.URL,
     };
-    console.log('Sending onclick message', msg);
     window.parent.postMessage(msg, '*');
+    if (event && event.preventDefault) { event.preventDefault(); }
+    return false;
   };
 
   window.addEventListener('load', () => {
     let msg = {
       type: 'KBNavLoad',
-      code: {{ .Site.Data.kb.code }},
+      code: {{ hugo.Data.kb.code }},
       title: document.title,
       url: document.URL,
     };

@@ -1,7 +1,21 @@
+/* Rail scrollbars, themed from base_zb.css tokens rather than hardcoded colours.
+ *
+ * These used to be `$white $white` at rest and `$gray-200 $white` on hover — a
+ * hide-until-hover effect that only reads as "hidden" because it assumed a white
+ * page. `_dark.scss` carried a duplicate of the whole block in Doks' dark palette,
+ * which then sat visibly off against the ZeroBias dark surface. Both are replaced
+ * by the single tokenised block below: --scrollbar-* swap with the theme in
+ * base_zb.css, so one set of rules serves light and dark.
+ *
+ * This makes the rail scrollbar always visible and matched to the document
+ * scrollbar, rather than appearing on hover. That is deliberate.
+ *
+ * Custom properties resolve at computed-value time, so it does not matter that
+ * base_zb.css is a separate sheet loaded after this one. */
 .docs-links,
 .docs-toc {
   scrollbar-width: thin;
-  scrollbar-color: $white $white;
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
 }
 
 .docs-links::-webkit-scrollbar,
@@ -11,28 +25,17 @@
 
 .docs-links::-webkit-scrollbar-track,
 .docs-toc::-webkit-scrollbar-track {
-  background: $white;
+  background: var(--scrollbar-track);
 }
 
 .docs-links::-webkit-scrollbar-thumb,
 .docs-toc::-webkit-scrollbar-thumb {
-  background: $white;
-}
-
-.docs-links:hover,
-.docs-toc:hover {
-  scrollbar-width: thin;
-  scrollbar-color: $gray-200 $white;
-}
-
-.docs-links:hover::-webkit-scrollbar-thumb,
-.docs-toc:hover::-webkit-scrollbar-thumb {
-  background: $gray-200;
+  background: var(--scrollbar-thumb);
 }
 
 .docs-links::-webkit-scrollbar-thumb:hover,
 .docs-toc::-webkit-scrollbar-thumb:hover {
-  background: $gray-200;
+  background: var(--scrollbar-thumb-hover);
 }
 
 .docs-links h3,
@@ -82,6 +85,12 @@ a.docs-link {
   color: $body-color;
   display: block;
   padding: 0.125rem 0;
+  /* calc + var, not Sass math: `$font-size-base * 0.9375` is evaluated at compile
+     time and bakes in Bootstrap's base, so the rail could never track the platform
+     type scale. base_zb.css owns --size-base, and reading it at computed-value time
+     is what lets this follow the article's type rather than sit at a fixed ratio of
+     a value base_zb.css does not set. The Sass fallback keeps the rule valid if the
+     sheet is ever absent. Ported from zerobias-org/kb 999d741dc (Thomas Cavalier). */
   font-size: calc(var(--size-base, #{$font-size-base}) * 0.9375);
 }
 

@@ -12,4 +12,32 @@
   <link rel="stylesheet" href="{{ $secureCSS.Permalink }}">
 -->
 {{ end -}}
+{{/*
+  ZeroBias article theming, served from the CDN rather than built into the article.
+
+  ORDER IS LOAD-BEARING and must stay main.css -> base_zb.css -> kb.css.
+
+  base_zb.css normalises type. Its `h1 { font-size: var(--h1) }` and Bootstrap's
+  RFS `h1 { font-size: calc(1.34375rem + 1.125vw) }` have EQUAL specificity, so
+  source order alone decides which wins. Move base_zb.css above main.css and Doks
+  takes every heading back — silently, with no error anywhere to notice.
+
+  kb.css re-themes colour surfaces and must come last for the same reason: its
+  selectors mirror Doks' own specificity so ties break on source order. It also
+  depends on base_zb.css for its tokens — every --zb-* in it aliases a base_zb
+  token, so kb.css WITHOUT base_zb.css leaves the article unthemed entirely.
+
+  base_zb.css only touches element selectors (plus .lead), so Doks keeps its
+  layout: the grid, the 1200px TOC swap and the "On this page" collapse are all
+  class-based and untouched.
+
+  Served (not bundled) so a colour or type change is a static-assets deploy
+  instead of a rebuild of every article. They also carry the document scrollbar,
+  which cannot be themed from the embedding app at all: CSS does not cascade into
+  an iframe, and Chrome does not propagate color-scheme into a cross-origin one.
+
+  Source: zerobias-com/static-assets package/platform/stylesheets/
+*/}}
+<link rel="stylesheet" href="https://cdn.zerobias.com/static/stylesheets/base_zb.css">
+<link rel="stylesheet" href="https://cdn.zerobias.com/static/stylesheets/kb.css">
 <noscript><style>img.lazyload { display: none; }</style></noscript>

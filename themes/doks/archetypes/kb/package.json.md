@@ -27,8 +27,8 @@
     "test": "npm run build",
     "test:integration": "dataloader"
   },
-  "auditmation": {
-    "package": "auditmation.{{ getenv "HUGO_CODE" }}.kb",
+  "zerobias": {
+    "package": "zerobias.{{ getenv "HUGO_CODE" }}.kb",
     "import-artifact": "kb",
     "dataloader-version": "0.5.4"
   }

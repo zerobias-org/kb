@@ -11,6 +11,18 @@ const codePrefix = process.env.CODE_PREFIX || 'ct';
 const cdnRoot = `https://cdn.zerobias.com/${codePrefix}`;
 const s3Uri = `s3://auditmation-cdn/${codePrefix}`;
 const titlePrefix = process.env.TITLE_PREFIX || 'Connect to'
+// Objects used to go up with no caching header at all, which leaves CloudFront on
+// its default TTL and browsers on heuristic freshness — a window derived from the
+// object's age, with no revalidation, that grows the longer an article sits. Five
+// minutes plus revalidation makes propagation predictable instead.
+//
+// It matters more here than on a normal site because nothing in this pipeline
+// purges CloudFront: no distributionId reaches this action, so a re-render stays
+// invisible until the edge copy expires on its own.
+//
+// Same value as auditlogic/kb's scripts/cdnUpdate.sh (CACHE_CONTROL), so kb and ct
+// articles age out of the edge on the same clock.
+const cacheControl = process.env.CACHE_CONTROL || 'public, max-age=300, must-revalidate';
 const tagOnly = process.env.TAG_ONLY !== undefined && process.env.TAG_ONLY === 'true';
 console.log('TAG ONLY', tagOnly);
 console.log('TAG ONLY', process.env.TAG_ONLY);
@@ -22,7 +34,6 @@ if (tagOnly) {
 }
 
 const npmrc = `
-@auditmation:registry=https://pkg.zerobias.org
 @auditlogic:registry=https://pkg.zerobias.org
 @zerobias-org:registry=https://pkg.zerobias.org
 //pkg.zerobias.org/:_authToken=\${ZB_TOKEN}
@@ -33,7 +44,7 @@ function copyAndReplaceFunc(pkgDir) {
    * - __PACKAGE_NAME__
    * - __VERSION__
    * - __DESCRIPTION__
-   * - __DATALOADER_PACKAGE__ (eg auditmation.kb.kbfoo)
+   * - __DATALOADER_PACKAGE__ (eg zerobias-org.kb-ctfoo-foo.kb)
    * - __CONTENT_PACKAGE__
    * - __CONTENT_VERSION__
    * - __CODE__
@@ -74,7 +85,7 @@ async function publishReleaseEvent(kbDir) {
   const {
     name,
     version,
-    auditmation,
+    zerobias,
   } = pkgJson;
   console.info(`Sending event for ${name}@${version}`);
 
@@ -94,7 +105,7 @@ async function publishReleaseEvent(kbDir) {
       version,
       repository,
       actionRunUrl,
-      auditmation,
+      zerobias,
       distTags,
     },
   };
@@ -229,10 +240,10 @@ async function main() {
       spawnSync('npm', ['dist-tag', 'add', `${pkgScope}/${kbPkgName}@${pkgVersion}`, tag], execOptions);
       if (tag === 'latest') {
         spawnSync('npm', ['run', 'build', '--', '-b', `${cdnRoot}/${code}`], execOptions);
-        spawnSync('aws', ['s3', 'sync', 'public', `${s3Uri}/${code}`], execOptions);
+        spawnSync('aws', ['s3', 'sync', 'public', `${s3Uri}/${code}`, '--cache-control', cacheControl], execOptions);
       } else {
         spawnSync('npm', ['run', 'build', '--', '-b', `${cdnRoot}/${tag}/${code}`], execOptions);
-        spawnSync('aws', ['s3', 'sync', 'public', `${s3Uri}/${tag}/${code}`], execOptions);
+        spawnSync('aws', ['s3', 'sync', 'public', `${s3Uri}/${tag}/${code}`, '--cache-control', cacheControl], execOptions);
       }
     } else {
       console.info(`Dist tag: ${tag} version does not match, skipping`);

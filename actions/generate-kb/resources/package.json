@@ -12,7 +12,7 @@
   "publishConfig": {
     "registry": "https://npm.pkg.github.com/"
   },
-  "auditmation": {
+  "zerobias": {
     "package": "__DATALOADER_PACKAGE__",
     "import-artifact": "kb",
     "dataloader-version": "3.7.5"

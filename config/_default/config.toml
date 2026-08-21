@@ -3,7 +3,8 @@ disableAliases = true
 disableHugoGeneratorInject = true
 enableEmoji = true
 enableRobotsTXT = true
-paginate = 7
+[pagination]
+  pagerSize = 7
 rssLimit = 10
 
 # Multilingual
@@ -11,29 +12,21 @@ defaultContentLanguage = "en"
 disableLanguages = ["de", "nl"]
 # defaultContentLanguageInSubdir = true
 
-# add redirects/headers
+# The REDIRECTS and HEADERS output formats are gone, along with the text/netlify
+# mediaType that existed only to serve them and the two templates that rendered them.
+# They emitted Netlify's _redirects and _headers into every article bundle, and these
+# articles are served from S3 behind CloudFront, which ignores both files entirely.
+#
+# _headers was not merely inert, it was wrong: it declared X-Frame-Options SAMEORIGIN
+# and a CSP whose frame-ancestors allowed jamstackthemes.dev, which is Doks' own demo
+# host. Had anything honoured it, it would have blocked the platform iframe these
+# articles are designed to render inside.
+#
+# _redirects mapped Hugo aliases to Netlify redirect rules and carried Doks' demo
+# examples as comments.
 [outputs]
-home = ["HTML", "RSS", "REDIRECTS", "HEADERS"]
+home = ["HTML", "RSS"]
 section = ["HTML", "RSS", "SITEMAP"]
-
-# remove .{ext} from text/netlify
-[mediaTypes."text/netlify"]
-suffixes = [""]
-delimiter = ""
-
-# add output format for netlify _redirects
-[outputFormats.REDIRECTS]
-mediaType = "text/netlify"
-baseName = "_redirects"
-isPlainText = true
-notAlternative = true
-
-# add output format for netlify _headers
-[outputFormats.HEADERS]
-mediaType = "text/netlify"
-baseName = "_headers"
-isPlainText = true
-notAlternative = true
 
 # add output format for section sitemap.xml
 [outputFormats.SITEMAP]
@@ -45,7 +38,7 @@ noUgly = true
 rel  = "sitemap"
 
 [caches]
-  [caches.getjson]
+  [caches.getresource]
     dir = ":cacheDir/:project"
     maxAge = "10s"
 

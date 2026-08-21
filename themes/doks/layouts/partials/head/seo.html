@@ -35,7 +35,13 @@
     <link rel="next" href="{{ .Paginator.Next.URL | absURL }}">
   {{ end -}}
 {{ else  -}}
-  <link rel="canonical" href="{{ .Permalink }}">
+  {{/*
+    index.html, not the bare permalink. Articles are served as static objects from
+    S3 behind CloudFront, where the directory form .../kb/dev/kb9/ is not a key and
+    returns NoSuchKey — only .../kb9/index.html resolves. A canonical pointing at a
+    404 is worse than none, since that is the URL crawlers and unfurlers follow.
+  */}}
+  <link rel="canonical" href="{{ .Permalink }}index.html">
 {{ end -}}
 
 {{ partial "head/opengraph.html" . }}

@@ -32,10 +32,18 @@ jobs:
       with:
         node-version-file: '.nvmrc'
 
+    # This pin is the version that actually renders. Unlike auditlogic/kb, this
+    # repo has no hugo-extended devDependency, so nothing shadows the binary
+    # installed here on PATH — bumping it here is the whole change.
+    #
+    # 0.164.0 to match auditlogic/kb, so a ct article and a kb article rendered
+    # from the same theme come out the same. The theme ported alongside this uses
+    # hugo.Data and .Site.Params.author, neither of which exists on 0.110 — the
+    # bump and the theme have to move together.
     - name: Setup Hugo
       uses: peaceiris/actions-hugo@v2
       with:
-        hugo-version: '0.110.0'
+        hugo-version: '0.164.0'
         extended: true
 
     - name: configure aws tools creds
@@ -55,6 +63,7 @@ jobs:
         secrets: |
           operations-kv/data/ci/github readPackagesToken | READ_TOKEN;
           operations-kv/data/ci/slack releasesWebhook | SLACK_RELEASES_WEBHOOK ;
+          operations-kv/data/ci/slack devopsNotifications | SLACK_DEVOPS_NOTIFICATIONS ;
           operations-kv/data/ci/github writePackagesToken | WRITE_TOKEN;
 
     - name: Bootstrap
