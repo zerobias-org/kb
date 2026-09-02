@@ -1,0 +1,29 @@
+# Theme translations.
+#
+# This file was missing entirely, so every `{{ i18n "..." }}` call in the theme
+# resolved to an empty string. Hugo does not error on a missing key by default —
+# it silently substitutes nothing — so the breakage was invisible in the build log
+# and only showed up as blank UI.
+#
+# The visible symptom that led here: the "On this page" toggle below 1200px rendered
+# as a bare 35x29px chevron with no text, because its label is `i18n "on-this-page"`.
+# The mobile sidebar heading and the search placeholder were blank for the same reason.
+
+[on-this-page]
+other = "On this page"
+
+[browse]
+other = "Browse"
+
+[search-text]
+other = "Search"
+
+# "Article" rather than "Page": this site only ever serves KB articles, and naming
+# the thing that is missing is more use than restating the HTTP status. Articles are
+# versioned packages that get renamed and retired, which is the usual reason someone
+# lands here from a deep link in Slack, the app, or a stale search result.
+[404-title]
+other = "Article not found"
+
+[404-text]
+other = "This article may have been renamed or retired. Try searching the Knowledge Base for it."

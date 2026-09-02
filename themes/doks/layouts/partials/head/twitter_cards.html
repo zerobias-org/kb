@@ -15,7 +15,8 @@
     <meta name="twitter:image" content="{{ $featured.Permalink }}">
   {{ else -}}
     {{ with $.Site.Params.images -}}
-      <meta name="twitter:image" content="{{ index . 0 | absURL }}">
+      {{/* As-is, not absURL — see opengraph.html. params.images is a full CDN URL. */}}
+      <meta name="twitter:image" content="{{ index . 0 }}">
     {{ else -}}
       <meta name="twitter:card" content="summary">
     {{ end -}}

@@ -1,5 +1,10 @@
 table {
   @extend .table;
+  /* Markdown emits a bare <table> with no classes, so Bootstrap's row hover —
+     gated on `.table-hover > tbody > tr:hover > *` — never applied and article
+     tables had no hover at all. Extending it here is what makes the
+     --bs-table-hover-* tokens in kb.css actually do something. */
+  @extend .table-hover;
 
   margin: 3rem 0;
 }

@@ -1,5 +1,5 @@
 baseURL = "http://localhost:1313"
-languageCode = "en-us"
+locale = "en-us"
 title = "ZeroBias org Knowledge Base"
 theme = "doks"
 ignoreFiles = [
@@ -19,4 +19,4 @@ ignoreFiles = [
 enableGitInfo = true
 
 [frontmatter]
-lastmod = [':git', ':fileModTime', 'lastmod']
+lastmod = ['lastmod', ':git', ':fileModTime']

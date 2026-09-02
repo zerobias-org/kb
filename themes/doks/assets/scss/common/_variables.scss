@@ -43,7 +43,10 @@ $enable-reduced-motion:       true;
 $enable-smooth-scroll:        true;
 $enable-grid-classes:         true;
 $enable-button-pointers:      true;
-$enable-rfs:                  true;
+// RFS makes every Bootstrap font-size fluid — `calc(rem + vw)` — which base_zb.css
+// already defeats for h1-h6 by source order, but not for .lead, .display-*, buttons,
+// alerts or the TOC. Off, so those stay predictable against base_zb's static ladder.
+$enable-rfs:                  false;
 $enable-validation-icons:     true;
 $enable-negative-margins:     true;
 $enable-deprecation-messages: true;
@@ -111,7 +114,11 @@ $font-family-monospace:       sfmono-regular, menlo, monaco, consolas, "Liberati
 $font-family-base:            $font-family-sans-serif;
 // stylelint-enable value-keyword-case
 
-$font-size-base:              .875rem; // Assumes the browser default, typically `16px`
+// 1rem, not .875rem: base_zb.css re-anchors body to 1rem anyway, so leaving this at
+// 14px only meant every Bootstrap-derived size started one step below the sheet that
+// overrides it. At 1rem, Bootstrap's own $h1-font-size ($font-size-base * 2.5) also
+// lands on 2.5rem, matching base_zb's --h1 instead of fighting it.
+$font-size-base:              1rem;
 $font-size-xl:                $font-size-base * 1.375;
 $font-size-lg:                $font-size-base * 1.25;
 $font-size-md:                $font-size-base * 1.125;

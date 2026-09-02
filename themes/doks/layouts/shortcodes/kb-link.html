@@ -1,1 +1,1 @@
-<a href="{{ .Get "page" | absURL }}" onClick="sendNavMessage('{{ .Get "page" }}', '{{ .Get "page" | absURL }}')">{{ .Get "title" }}</a>
+<a href="{{ .Get "page" | absURL }}" onClick="return sendNavMessage('{{ .Get "page" }}', '{{ .Get "page" | absURL }}', event)">{{ .Get "title" }}</a>

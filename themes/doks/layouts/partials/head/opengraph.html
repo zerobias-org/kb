@@ -6,7 +6,9 @@
   {{ $paginator := .Paginate (where .Site.RegularPages.ByDate.Reverse "Section" "blog" ) -}}
   <meta property="og:url" content="{{ .Paginator.URL | absURL }}">
 {{ else -}}
-  <meta property="og:url" content="{{ .Permalink }}">
+  {{/* index.html for the same reason as the canonical in seo.html — the directory
+       form is not an S3 key and 404s, and og:url is what an unfurler fetches. */}}
+  <meta property="og:url" content="{{ .Permalink }}index.html">
 {{ end -}}
 {{ with .Site.Params.title -}}
   <meta property="og:site_name" content="{{ . }}">
@@ -48,14 +50,21 @@
     <meta property="og:image" content="{{ $featured.Permalink }}"/>
   {{ else -}}
     {{ with $.Site.Params.images -}}
-      <meta property="og:image" content="{{ index . 0 | absURL }}"/>
+      {{/* Emitted as-is, NOT through absURL: params.images now holds a full CDN URL,
+           and absURL exists to resolve relative paths against baseURL — which is
+           per-article here and is exactly what produced the 404s. Width/height let
+           an unfurler reserve the right box before the image loads. */}}
+      <meta property="og:image" content="{{ index . 0 }}"/>
+      <meta property="og:image:type" content="image/png">
+      <meta property="og:image:width" content="1200">
+      <meta property="og:image:height" content="630">
       <meta property="og:image:alt" content="{{ $.Site.Params.title }}">
     {{ end -}}
   {{ end -}}
 {{ end -}}
 
 {{ with $.Site.Params.images -}}
-  {{ $.Scratch.Set "primaryImage" (index . 0 | absURL) -}}
+  {{ $.Scratch.Set "primaryImage" (index . 0) -}}
 {{ end -}}
 
 {{ with .Params.audio -}}

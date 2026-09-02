@@ -1,0 +1,98 @@
+name: CDN Update
+
+# Re-render published ct articles onto the CDN.
+#
+# Manual-only, and deliberately separate from Generate KB. Generate KB is driven by a
+# module release: it regenerates ONE article from its module's current USERGUIDE.md and
+# publishes a new npm version. This publishes nothing — it re-renders articles that are
+# already published, which is what a theme or stylesheet change needs, since a rendered
+# article is static HTML and no template change reaches it until it is rendered again.
+on:
+  workflow_dispatch:
+    inputs:
+      rebuild_list:
+        description: 'Published ct article packages, comma/space/newline separated (e.g. @auditlogic/kb-ctgithubgithub-github-github)'
+        required: true
+      code_prefix:
+        description: 'CDN path segment and code prefix (default: ct)'
+        required: false
+        default: 'ct'
+
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  ZB_TOKEN: ${{ secrets.ZB_TOKEN }}
+
+jobs:
+  cdn-update:
+    name: 'CDN Update'
+    runs-on: 'ubuntu-latest'
+    steps:
+    - name: check out code
+      uses: actions/checkout@v3
+
+    - name: setup node
+      uses: actions/setup-node@v3
+      with:
+        node-version-file: '.nvmrc'
+
+    # Must match the pin in generate-kb.yml. If the two drift, an article re-rendered
+    # here comes out different from the same article rendered by a module release —
+    # which is the exact class of drift this workflow exists to clean up.
+    - name: Setup Hugo
+      uses: peaceiris/actions-hugo@v2
+      with:
+        hugo-version: '0.164.0'
+        extended: true
+
+    - name: configure aws tools creds
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        role-to-assume: arn:aws:iam::961260934100:role/github-actions-publishing-role
+        role-session-name: ${{ github.event.repository.name }}
+        aws-region: us-east-1
+
+    - name: Import Secrets
+      uses: hashicorp/vault-action@v2.4.3
+      with:
+        method: jwt
+        url: https://vault.auditmation.io:8200
+        role: publishing-role
+        path: gh-actions
+        secrets: |
+          operations-kv/data/ci/slack devopsNotifications | SLACK_DEVOPS_NOTIFICATIONS ;
+
+    - name: Bootstrap
+      shell: bash
+      run: npm ci
+      env:
+        ZB_TOKEN: ${{ env.ZB_TOKEN }}
+
+    # The credentials configure-aws-credentials issues are good for one hour. Each
+    # article renders once per live dist-tag (dev/qa/uat/latest, rc skipped), so a list
+    # long enough to outrun that window will die partway through with ExpiredToken —
+    # split it rather than growing it.
+    - name: Re-render to CDN
+      shell: bash
+      run: ./scripts/cdnPublish.sh
+      env:
+        REBUILD_LIST: ${{ inputs.rebuild_list }}
+        CODE_PREFIX: ${{ inputs.code_prefix }}
+        ZB_TOKEN: ${{ env.ZB_TOKEN }}
+
+    # A manual workflow is easy to not notice failing, and the failure that matters
+    # here is the credential window expiring midway: the run dies with ExpiredToken
+    # having synced some articles and not others, so the fleet is left half-updated
+    # in a state no one is watching for.
+    - name: Slack Notification
+      uses: rtCamp/action-slack-notify@master
+      if: failure()
+      env:
+        SLACK_WEBHOOK: ${{ env.SLACK_DEVOPS_NOTIFICATIONS }}
+        SLACK_ICON_EMOJI: ":fire"
+        MSG_MINIMAL: 'true'
+        SLACK_TITLE: ":fire: ${{ github.repository }} cdn update failed"
+        SLACK_MESSAGE: "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+        SLACK_COLOR: danger

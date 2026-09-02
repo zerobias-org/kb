@@ -3,6 +3,21 @@
   <div class="col-md-12 col-lg-12 col-xl-12">
     <article>
       <h1>{{ .Title }}</h1>
+      {{/*
+        The narrow-screen "On this page" toggle. It belongs HERE, inside the article
+        column directly under the h1 — the same place single.html puts it.
+
+        It used to sit at the end of this row, after both the article column and the
+        rail. Below 1200px the row stacks, so it rendered after the entire article:
+        measured on kb9 at offsetTop 14312 in a 14341px document. The right rail
+        hides under 1200px, so its only replacement was a control no reader would
+        ever scroll far enough to find.
+      */}}
+      {{ if ne .Params.toc false -}}
+      <nav class="d-xl-none" aria-label="Quaternary navigation">
+        {{ partial "sidebar/docs-toc.html" . }}
+      </nav>
+      {{ end -}}
       <div>{{ .Content }}</div>
 			<!-- <div class="card-list">
 				{{ $currentSection := .CurrentSection }}
@@ -20,9 +35,6 @@
   </div>
 
   <nav class="docs-toc{{ if ne .Site.Params.options.navbarSticky true }} docs-toc-top{{ end }} d-none d-xl-block col-xl-3" aria-label="Secondary navigation">
-    {{ partial "sidebar/docs-toc.html" . }}
-  </nav>
-  <nav class="d-xl-none" aria-label="Quaternary navigation">
     {{ partial "sidebar/docs-toc.html" . }}
   </nav>
 </div>
