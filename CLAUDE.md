@@ -8,7 +8,7 @@ This is the **ZeroBias Community Knowledge Base Repository** containing open-sou
 
 **Repository Role:** Community-contributed documentation and knowledge base articles
 
-This repository follows the same structure as `auditlogic/kb` but contains community-contributed, open-source documentation.
+This repository contains community-contributed, open-source documentation; a proprietary counterpart repository follows the same structure.
 
 ## Current Status
 
@@ -125,8 +125,6 @@ Common KB article categories:
 
 - **[Root CLAUDE.md](../../CLAUDE.md)** - Meta-repo guidance
 - **[ContentArtifacts.md](../../ContentArtifacts.md)** - Content catalog system
-- **[auditlogic/kb/CLAUDE.md](../../auditlogic/kb/CLAUDE.md)** - Proprietary KB articles (comprehensive documentation)
-- **[auditmation/platform/dataloader/CLAUDE.md](../../auditmation/platform/dataloader/CLAUDE.md)** - Dataloader processor
 - **[Hugo Documentation](https://gohugo.io/)** - Static site generator
 
 ## Important Notes
@@ -139,7 +137,7 @@ Common KB article categories:
 - MIT/Apache license
 - Community edits and translations
 
-**Proprietary Repository (auditlogic/kb):**
+**Proprietary Repository (private):**
 - Official platform documentation
 - Private GitHub repository
 - Commercial license
