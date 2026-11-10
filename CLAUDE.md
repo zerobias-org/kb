@@ -42,7 +42,7 @@ kb/
 
 ## File Format Reference
 
-**Source of Truth:** `../../auditmation/platform/dataloader/src/processors/kb/`
+**Source of Truth:** `../../com/platform/dataloader/src/processors/kb/`
 
 **Expected Structure:**
 - `_index.md` - Hugo-formatted Markdown with frontmatter
@@ -106,7 +106,7 @@ Common KB article categories:
 ## Integration with Platform
 
 ### Dataloader Integration
-**Handler Location:** `../../auditmation/platform/dataloader/src/processors/kb/`
+**Handler Location:** `../../com/platform/dataloader/src/processors/kb/`
 **Database Table:** `catalog.kb_article`
 
 ### Hugo Build Process
@@ -126,7 +126,7 @@ Common KB article categories:
 - **[Root CLAUDE.md](../../CLAUDE.md)** - Meta-repo guidance
 - **[ContentArtifacts.md](../../ContentArtifacts.md)** - Content catalog system
 - **[auditlogic/kb/CLAUDE.md](../../auditlogic/kb/CLAUDE.md)** - Proprietary KB articles (comprehensive documentation)
-- **[auditmation/platform/dataloader/CLAUDE.md](../../auditmation/platform/dataloader/CLAUDE.md)** - Dataloader processor
+- **[com/platform/dataloader/CLAUDE.md](../../com/platform/dataloader/CLAUDE.md)** - Dataloader processor
 - **[Hugo Documentation](https://gohugo.io/)** - Static site generator
 
 ## Important Notes
