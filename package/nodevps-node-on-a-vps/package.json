@@ -1,0 +1,32 @@
+{
+  "name": "@zerobias-org/kb-nodevps-node-on-a-vps",
+  "version": "0.1.0",
+  "description": "Run ZeroBias Hub Node VMs on a VPS with nested KVM, using a ready-made host kit",
+  "author": "team@zerobias.com",
+  "license": "ISC",
+  "main": "_index.md",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:zerobias-org/kb.git",
+    "directory": "package/nodevps-node-on-a-vps"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com/"
+  },
+  "files": [
+    "_index.md",
+    "node-kvm-host/**"
+  ],
+  "scripts": {
+    "build": "hugo --source \"$(git rev-parse --show-toplevel)\" --contentDir \"$(pwd)\" --destination \"$(pwd)/public\"",
+    "clean": "rm -rf public",
+    "start": "hugo server --disableFastRender --source $(git rev-parse --show-toplevel) --contentDir $(pwd)",
+    "test": "npm run build",
+    "test:integration": "dataloader"
+  },
+  "zerobias": {
+    "package": "zerobias.nodevps.kb",
+    "import-artifact": "kb",
+    "dataloader-version": "1.0.0"
+  }
+}
