@@ -1,35 +1,34 @@
 {
   "name": "@zerobias-org/kb-{{ getenv "HUGO_NAME" }}",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "{{ getenv "HUGO_DESCRIPTION" }}",
   "author": "{{ getenv "HUGO_AUTHOR" }}",
   "license": "ISC",
-  "main": "index.md",
+  "main": "_index.md",
   "repository": {
     "type": "git",
     "url": "git@github.com:zerobias-org/kb.git",
     "directory": "package/{{ getenv "HUGO_NAME" }}"
   },
   "publishConfig": {
-    "registry": "https://npm.pkg.github.com/"
+    "registry": "https://pkg.zerobias.org"
   },
   "files": [
     "images/**",
-    "index.yml",
+    "resources/**",
     "_index.md",
-    "index.md", 
-    "README.md"
+    "README.md",
+    "npm-shrinkwrap.json"
   ],
   "scripts": {
     "build": "hugo --source \"$(git rev-parse --show-toplevel)\" --contentDir \"$(pwd)\" --destination \"$(pwd)/public\"",
     "clean": "rm -rf public",
     "start": "hugo server --disableFastRender --source $(git rev-parse --show-toplevel) --contentDir $(pwd)",
-    "test": "npm run build",
-    "test:integration": "dataloader"
+    "test": "npm run build"
   },
   "zerobias": {
     "package": "zerobias.{{ getenv "HUGO_CODE" }}.kb",
     "import-artifact": "kb",
-    "dataloader-version": "0.5.4"
+    "dataloader-version": "1.0.0"
   }
 }

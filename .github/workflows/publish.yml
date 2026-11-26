@@ -1,0 +1,98 @@
+name: Publish KB
+
+# Publish hand-authored articles under package/ — the counterpart of
+# auditlogic/kb's publish.yml. Generated "connect to" articles do not pass
+# through here: they have no package/ directory and are published by
+# generate-kb.yml, re-rendered by cdn-update.yml.
+on:
+  push:
+    branches: [main, qa, dev, uat]
+    paths:
+      - 'package/**'
+      - '.github/workflows/publish.yml'
+  workflow_dispatch:
+    inputs:
+      kb:
+        description: 'KB article to publish (directory name under package/). Leave blank for all changed.'
+        required: false
+      rebuild_list:
+        description: 'Re-render only these articles to the CDN (codes or dir names, comma/space separated). Publishes nothing.'
+        required: false
+
+permissions:
+  contents: write
+  packages: write
+  id-token: write
+  pull-requests: read
+
+jobs:
+  publish:
+    uses: zerobias-org/devops/.github/workflows/zbb-publish-reusable.yml@main
+    with:
+      ghcr-namespace: zerobias-org
+      dispatch-input-name: kb
+      dispatch-input-value: ${{ inputs.kb }}
+      # This repo has no uat/qa/dev branches yet, so there is nothing for the
+      # built-in main -> uat -> qa -> dev cascade to sync into.
+      skip-sync: true
+    secrets: inherit
+
+  # KB-specific: render each just-published article with Hugo and sync it to
+  # cdn.zerobias.com. Runs after publish so dist-tags exist when cdnUpdate.sh
+  # checks them. Main only, same as auditlogic/kb.
+  kb-cdn-update:
+    runs-on: ubuntu-latest
+    name: KB CDN Update
+    needs: publish
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          ref: main
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version-file: '.nvmrc'
+
+      # Must match the pin in generate-kb.yml and cdn-update.yml. This repo has
+      # no hugo-extended devDependency, so this binary is the one that renders.
+      - uses: peaceiris/actions-hugo@v2
+        with:
+          hugo-version: '0.164.0'
+          extended: true
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::961260934100:role/github-actions-publishing-role
+          role-session-name: kb
+          aws-region: us-east-1
+
+      - uses: hashicorp/vault-action@v2.4.3
+        with:
+          method: jwt
+          url: ${{ secrets.VAULT_ADDR }}
+          role: publishing-role
+          path: gh-actions
+          secrets: |
+            operations-kv/data/ci/slack devopsNotifications | SLACK_DEVOPS_NOTIFICATIONS ;
+
+      - run: npm ci
+        env:
+          ZB_TOKEN: ${{ secrets.ZB_TOKEN }}
+
+      - run: ./scripts/cdnUpdate.sh
+        env:
+          ZB_TOKEN: ${{ secrets.ZB_TOKEN }}
+          SINCE: HEAD~2
+          REBUILD_LIST: ${{ inputs.rebuild_list }}
+
+      - uses: rtCamp/action-slack-notify@master
+        if: failure()
+        env:
+          SLACK_WEBHOOK: ${{ env.SLACK_DEVOPS_NOTIFICATIONS }}
+          SLACK_ICON_EMOJI: ":fire"
+          MSG_MINIMAL: 'true'
+          SLACK_TITLE: ":fire: ${{ github.repository }} cdn update failed"
+          SLACK_MESSAGE: "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          SLACK_COLOR: danger

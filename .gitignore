@@ -137,3 +137,14 @@ dist
 # Vite logs files
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+
+# Gradle / zbb
+.gradle/
+.zbb-gradle/
+build/
+gradle-local.properties
+
+# Hugo render output (per article, and the code handed to the theme)
+package/*/public/
+data/kb.json
+.hugo_build.lock
