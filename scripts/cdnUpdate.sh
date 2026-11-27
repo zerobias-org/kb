@@ -104,7 +104,14 @@ for package in $PACKAGES; do
     echo "Checking $tag $tagVersion against $VERSION"
     if [ "$tagVersion" = "$VERSION" ]; then
       echo "Version matches, uploading new version to cdn"
-      code=$(jq -r '.name | split("-")[1]' package.json)
+      # Drop the scope before splitting: "@zerobias-org" itself contains a hyphen, so
+      # splitting the full name gives "org/kb" instead of the code. (auditlogic/kb's
+      # copy splits the full name, which only works because "@auditlogic" has none.)
+      code=$(jq -r '.name | split("/")[1] | split("-")[1]' package.json)
+      if ! [[ "$code" =~ ^kbc[0-9]+$ ]]; then
+        echo "Refusing to publish: derived code '$code' from $NAME is not kbc<N>" >&2
+        exit 1
+      fi
       echo "{\"code\": \"$code\"}" > "$ROOT/data/kb.json"
       if [ "$tag" = "latest" ]; then
         npm run clean && npm run build -- -b "$CDNROOT/$code"
