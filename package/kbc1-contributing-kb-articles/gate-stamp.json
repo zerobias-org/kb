@@ -1,5 +1,5 @@
 {
-  "version": "1.0.0-uat.0",
+  "version": "1.0.1",
   "branch": "fix/npmrc-zerobias-com-scope",
   "sourceHash": "d797ffcf62861675cd3635374dbcb4c9357ccc253287da5138d30ca30fd628db",
   "testHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
