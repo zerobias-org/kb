@@ -89,6 +89,27 @@ fi
 echo "KB packages to render ($(echo "$PACKAGES" | wc -l | tr -d ' ')):"
 echo "$PACKAGES"
 
+# Fail the run unless the page just synced is really served: HTTP 200 and the
+# article's own code in the body. A green run must mean the article is live.
+# Retries cover CloudFront still holding a cached 404 for a brand-new article.
+verify_live() {
+  local url="$1" code="$2" attempt status body
+  body=$(mktemp)
+  for attempt in 1 2 3 4 5 6; do
+    status=$(curl -s -o "$body" -w '%{http_code}' "$url?verify=$(date +%s)" || echo 000)
+    if [ "$status" = "200" ] && grep -q "$code" "$body"; then
+      echo "Live: $url"
+      rm -f "$body"
+      return 0
+    fi
+    echo "Not live yet ($status), attempt $attempt/6: $url"
+    sleep 10
+  done
+  rm -f "$body"
+  echo "CDN check failed: $url did not return 200 with code '$code'" >&2
+  exit 1
+}
+
 for package in $PACKAGES; do
   [ -f "$ROOT/$package/package.json" ] || { echo "Skipping $package (no package.json)"; continue; }
   cd "$ROOT/$package"
@@ -116,12 +137,14 @@ for package in $PACKAGES; do
       if [ "$tag" = "latest" ]; then
         npm run clean && npm run build -- -b "$CDNROOT/$code"
         aws s3 sync public "$S3URI/$code" --cache-control "$CACHE_CONTROL"
+        verify_live "$CDNROOT/$code/index.html" "$code"
       elif [ "$tag" = "rc" ]; then
         echo "Skipping rc"
       else
         echo "Publishing $NAME@$VERSION to $tag"
         npm run clean && npm run build -- -b "$CDNROOT/$tag/$code"
         aws s3 sync public "$S3URI/$tag/$code" --cache-control "$CACHE_CONTROL"
+        verify_live "$CDNROOT/$tag/$code/index.html" "$code"
       fi
     fi
   done
